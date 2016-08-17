@@ -13,16 +13,16 @@ function CtrlLayer:addCtrlBtn()
         :pos(display.cx*0.15,display.cy/4)
         :scale(1.5)
         :onButtonPressed(function()
-            CtrlLayer.hero.moveStep = -3
-            CtrlLayer.hero:moveLeft()
-                print(_G.hero:getTag())
-            for i,v in ipairs(_G.enemys) do
-                print(v:getTag())
+            print("left")
+            CtrlLayer.hero.moveStep = -4
+            if CtrlLayer.hero:heroCanDoEvent("YidongL") then
+               CtrlLayer.hero:heroDoEvent("YidongL")
             end
         end)
-        :onButtonRelease(function()
-            CtrlLayer.hero:idle()
-            CtrlLayer.hero:unscheduleUpdate()
+        :onButtonRelease(function ()
+            if CtrlLayer.hero:heroCanDoEvent("Kongxian") then
+               CtrlLayer.hero:heroDoEvent("Kongxian")
+            end
         end)
         :addTo(self)
     --move right
@@ -30,47 +30,60 @@ function CtrlLayer:addCtrlBtn()
         :pos(display.cx*0.45,display.cy/4)
         :scale(1.5)
         :onButtonPressed(function ()
-            CtrlLayer.hero.moveStep = 3
-            CtrlLayer.hero:moveRight()
+            print("right")
+            CtrlLayer.hero.moveStep = 4
+            if CtrlLayer.hero:heroCanDoEvent("YidongR") then
+                CtrlLayer.hero:heroDoEvent("YidongR")
+            end
         end)
         :onButtonRelease(function ()
-            CtrlLayer.hero:idle()
-            CtrlLayer.hero:unscheduleUpdate()
+            if CtrlLayer.hero:heroCanDoEvent("Kongxian") then
+                CtrlLayer.hero:heroDoEvent("Kongxian")
+            end
         end)
         :addTo(self)
     --attack
     cc.ui.UIPushButton.new({normal = "hit.png",pressed="hit.png"})
         :pos(size.width*0.94,size.width - size.width*0.94)
-       -- :setAnchorPoint(cc.p(1,0))
         :scale(2)
         :onButtonClicked(function ()
-           CtrlLayer.hero:attack()
+           if CtrlLayer.hero:heroCanDoEvent("Gongji") then
+                CtrlLayer.hero:heroDoEvent("Gongji")
+           end
         end)
         :addTo(self)
     --jump
     cc.ui.UIPushButton.new({normal = "jump.png",pressed="jump.png"})
         :pos(size.width*0.835,size.width - size.width*0.93)
         :onButtonClicked(function ()
-            CtrlLayer.hero:jump()
+            if CtrlLayer.hero:heroCanDoEvent("Tiaoyue") then
+                CtrlLayer.hero:heroDoEvent("Tiaoyue")
+            end
         end)
         :addTo(self)
     --skill button
     cc.ui.UIPushButton.new({normal = "skill1.png",pressed="skill1.png"})
         :pos(size.width*0.88,size.width - size.width*0.87)
         :onButtonClicked(function ()
-            CtrlLayer.hero:skill1()
+             if CtrlLayer.hero:heroCanDoEvent("Jineng1") then
+                CtrlLayer.hero:heroDoEvent("Jineng1")
+            end
         end)
         :addTo(self)
     cc.ui.UIPushButton.new({normal = "skill2.png",pressed="skill2.png"})
         :pos(size.width*0.955,size.width - size.width*0.84)
         :onButtonClicked(function ()
-            CtrlLayer.hero:skill2()
+            if CtrlLayer.hero:heroCanDoEvent("Jineng2") then
+               CtrlLayer.hero:heroDoEvent("Jineng2")
+            end
         end)
         :addTo(self)
     cc.ui.UIPushButton.new({normal = "skill3.png",pressed="skill3.png"})
         :pos(size.width*0.77,size.width - size.width*0.97)
         :onButtonClicked(function ()
-            CtrlLayer.hero:skill3()
+            if CtrlLayer.hero:heroCanDoEvent("Jineng3") then
+               CtrlLayer.hero:heroDoEvent("Jineng3")
+            end
         end)
         :addTo(self)
 end
@@ -78,17 +91,6 @@ end
 function CtrlLayer:initLayer(role)
     
 
-    local menuitemPause = cc.MenuItemFont:create("Pause")
-    menuitemPause:setPosition(size.width,size.height)
-    menuitemPause:registerScriptTapHandler(function ()
-        --display.pause()
-        print("pause")
-    end)
-    local menu = cc.Menu:create(menuitemPause)
-    menuitemPause:setAnchorPoint(cc.p(1,1))
-    menu:setPosition(0,0)
-    self:addChild(menu)
-    
     self:addCtrlBtn()
     CtrlLayer.hero = role
 end

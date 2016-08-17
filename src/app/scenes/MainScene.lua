@@ -1,6 +1,5 @@
 cc.FileUtils:getInstance():addSearchPath("src/")
 
-require("Controller")
 local MainScene = class("MainScene", function()
     return display.newScene("MainScene")
 end) 
@@ -16,7 +15,9 @@ function loadAnimation(fileplist,filename)
 
         display.setAnimationCache(animations[i],animation)
     end   
-
+    local frames = display.newFrames("dead_%d.png", 1, 3)
+    local animation = display.newAnimation(frames, 0.1)
+    display.setAnimationCache("gethit", animation)
 end
 
 function MainScene:ctor()
@@ -39,8 +40,9 @@ function MainScene:ctor()
     menuitemStart:setPosition(size.width*0.3,size.height/3)
     --self:addChild(menuitem)
     menuitemStart:registerScriptTapHandler(function ()
-        local scene = require("PlayScene").new()
-            display.replaceScene(scene)
+        --local scene = require("PlayScene").new()
+        local scene = require("SelectScene").new()
+        display.replaceScene(scene)
     end)
     local menu = cc.Menu:create(menuitemHelp,menuitemStart)
     menu:setPosition(0,0)

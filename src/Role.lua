@@ -1,36 +1,83 @@
+require("BloodText")
 local Role = class("Role", function() 
 	return display.newSprite("idleR_1.png")
 end)
 Role.moveStep = 3
 Role.lockedEnemy = nil
+Role.movdDirection = 1  -- 1:right -1:left
+Role.health = 100
+Role.animStartTime = 0
+Role.animDuration = 0
+Role.hpBar = nil
+Role.roleId = 0
 function Role:ctor()
 	-- body 
 	self:scale(1.8)
 	self:idle()
-	--self:addNodeEventListener(cc.NODE_ENTER_FRAME_EVENT, handler(self, self.move)) --cc.NODE_ENTER_FRAME_EVENT   for every frame
-	--self:scheduleUpdate()
 end
 function Role:attack()
-	self:stopAllActions()
-	transition.playAnimationOnce(self,display.getAnimationCache("hit"))
-	transition.execute(self,cc.MoveBy:create(0.7,cc.p(0,0)),{
-		onComplete = function ()
-			self:idle()
-		end
-		})
-	-- body
+
+	if self:isBusy() == false then
+		self:stopAllActions()
+		transition.playAnimationOnce(self,display.getAnimationCache("hit"))
+		self.animStartTime = os.time()
+		self.animDuration = display.getAnimationCache("hit"):getDuration()+0.1
+	end
 end
 function Role:dead()
 	self:stopAllActions()
 	transition.playAnimationOnce(self,display.getAnimationCache("dead"))
-	-- body
+end
+function Role:getHit()
+		
+	if self:isBusy() == false then
+		self:stopAllActions()
+		transition.playAnimationOnce(self,display.getAnimationCache("gethit"))
+		self.animStartTime = os.time()
+		self.animDuration = display.getAnimationCache("gethit"):getDuration()
+		self.health = self.health - 12
+		
+		local label = BloodText:createText(12)
+    	label:pos(self:getPosition())
+    	display.getRunningScene():addChild(label)
+		-- if self.health < 0 then
+		-- 	local delId = self.roleId
+		-- 	table.remove(_G.enemys,self.roleId)
+		-- 	self:removeFromParent()
+
+		-- 	for i,v in ipairs(_G.enemys) do
+		-- 		if v.roleId > delId then
+		-- 			v.roleId = v.roleId - 1
+		-- 		end
+		-- 	end
+		-- end
+	end
 end
 function Role:idle()
-	-- body
-	self:stopAllActions()
-	display.getAnimationCache("idleR"):setDelayPerUnit(0.3)
-	transition.playAnimationForever(self,display.getAnimationCache("idleR"))
+
+		self:stopAllActions()
+		display.getAnimationCache("idleR"):setDelayPerUnit(0.3)
+		transition.playAnimationForever(self,display.getAnimationCache("idleR"))
 end
 
+function Role:changeFaceDire(direction)
+	-- body
+	self:setScaleX(direction)
 
+	if direction == 1 then
+		self.moveDirection = 1
+	else
+		self.moveDirection = -1
+	end
+	self:setScaleX(self.moveDirection*1.8)
+end
+function Role:isBusy()
+	
+	if os.time() - self.animStartTime >= self.animDuration then
+
+		return false
+	else
+		return true
+	end
+end
 return Role
