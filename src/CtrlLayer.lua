@@ -2,44 +2,69 @@ CtrlLayer = class("CtrlLayer",function()
 	return cc.Layer:create()
 	-- body
 end)
-CtrlLayer.hero = nil
-
+EventManager = require("EventManager")
 local size = cc.Director:getInstance():getWinSize()
+function CtrlLayer:ctor()
+    self.btnS1 = nil
+    self.btnS2 = nil
+    self.btnS3 = nil
+    self.labS1 = nil
+    self.labS2 = nil
+    self.labS3 = nil
+    self:addCtrlBtn()
+    self:addEventListener()
+end
 
-    -- body
+function CtrlLayer:sendMsgToListener(dispatcher_name,msg_table)
+    EventManager:pushEvent(dispatcher_name, msg_table)
+end
+function CtrlLayer:addEventListener()
+    EventManager:addEventListener("HERO_MSG",handler(self,self.getMsgForSkill))
+end
+function CtrlLayer:getMsgForSkill(event)
+    if event.data["level"] then
+        local level = event.data["level"]
+        if level == 1 then
+            self.btnS1:setButtonEnabled(false)
+            self.btnS2:setButtonEnabled(false)
+            self.btnS3:setButtonEnabled(false)
+        elseif level == 2 then
+            self.btnS1:setButtonEnabled(true)
+            self.btnS2:setButtonEnabled(false)
+            self.btnS3:setButtonEnabled(false)
+        elseif level == 3 then
+            self.btnS1:setButtonEnabled(true)
+            self.btnS2:setButtonEnabled(true)
+            self.btnS3:setButtonEnabled(false)
+        else
+            self.btnS1:setButtonEnabled(true)
+            self.btnS2:setButtonEnabled(true)
+            self.btnS3:setButtonEnabled(true)
+        end
+    end
+end
+
 function CtrlLayer:addCtrlBtn()
     --moveleft
     cc.ui.UIPushButton.new({normal = "btnLeftN.png",pressed="btnLeftP.png"})
         :pos(display.cx*0.15,display.cy/4)
         :scale(1.5)
         :onButtonPressed(function()
-            print("left")
-            CtrlLayer.hero.moveStep = -4
-            if CtrlLayer.hero:heroCanDoEvent("YidongL") then
-               CtrlLayer.hero:heroDoEvent("YidongL")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "YidongL", ["moveStep"]= -6})
         end)
         :onButtonRelease(function ()
-            if CtrlLayer.hero:heroCanDoEvent("Kongxian") then
-               CtrlLayer.hero:heroDoEvent("Kongxian")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Kongxian"})
         end)
         :addTo(self)
     --move right
     cc.ui.UIPushButton.new({normal = "btnRightN.png",pressed="btnRightP.png"})
         :pos(display.cx*0.45,display.cy/4)
         :scale(1.5)
-        :onButtonPressed(function ()
-            print("right")
-            CtrlLayer.hero.moveStep = 4
-            if CtrlLayer.hero:heroCanDoEvent("YidongR") then
-                CtrlLayer.hero:heroDoEvent("YidongR")
-            end
+        :onButtonPressed(function()
+            self:sendMsgToListener("ACTION",{["action"]= "YidongR", ["moveStep"]= 6})
         end)
         :onButtonRelease(function ()
-            if CtrlLayer.hero:heroCanDoEvent("Kongxian") then
-                CtrlLayer.hero:heroDoEvent("Kongxian")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Kongxian"})
         end)
         :addTo(self)
     --attack
@@ -47,65 +72,35 @@ function CtrlLayer:addCtrlBtn()
         :pos(size.width*0.94,size.width - size.width*0.94)
         :scale(2)
         :onButtonClicked(function ()
-           if CtrlLayer.hero:heroCanDoEvent("Gongji") then
-                CtrlLayer.hero:heroDoEvent("Gongji")
-           end
+            self:sendMsgToListener("ACTION",{["action"]= "Gongji"})
         end)
         :addTo(self)
     --jump
     cc.ui.UIPushButton.new({normal = "jump.png",pressed="jump.png"})
         :pos(size.width*0.835,size.width - size.width*0.93)
         :onButtonClicked(function ()
-            if CtrlLayer.hero:heroCanDoEvent("Tiaoyue") then
-                CtrlLayer.hero:heroDoEvent("Tiaoyue")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Tiaoyue"})
         end)
         :addTo(self)
     --skill button
-    cc.ui.UIPushButton.new({normal = "skill1.png",pressed="skill1.png"})
+    self.btnS1 = cc.ui.UIPushButton.new({normal = "skill1.png",pressed="skill1.png",disabled="locked.png"})
         :pos(size.width*0.88,size.width - size.width*0.87)
         :onButtonClicked(function ()
-             if CtrlLayer.hero:heroCanDoEvent("Jineng1") then
-                CtrlLayer.hero:heroDoEvent("Jineng1")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Jineng1"})
         end)
-        :addTo(self)
-    cc.ui.UIPushButton.new({normal = "skill2.png",pressed="skill2.png"})
+        :addTo(self)  
+    self.btnS2 = cc.ui.UIPushButton.new({normal = "skill2.png",pressed="skill2.png",disabled="locked.png"})
         :pos(size.width*0.955,size.width - size.width*0.84)
         :onButtonClicked(function ()
-            if CtrlLayer.hero:heroCanDoEvent("Jineng2") then
-               CtrlLayer.hero:heroDoEvent("Jineng2")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Jineng2"})
         end)
         :addTo(self)
-    cc.ui.UIPushButton.new({normal = "skill3.png",pressed="skill3.png"})
+    self.btnS3 = cc.ui.UIPushButton.new({normal = "skill3.png",pressed="skill3.png",disabled="locked.png"})
         :pos(size.width*0.77,size.width - size.width*0.97)
         :onButtonClicked(function ()
-            if CtrlLayer.hero:heroCanDoEvent("Jineng3") then
-               CtrlLayer.hero:heroDoEvent("Jineng3")
-            end
+            self:sendMsgToListener("ACTION",{["action"]= "Jineng3"})
         end)
         :addTo(self)
 end
-
-function CtrlLayer:initLayer(role)
-    
-
-    self:addCtrlBtn()
-    CtrlLayer.hero = role
-end
-function CtrlLayer:ctor()
-
-	-- body
-end
-
-
-function CtrlLayer:createLayer(role)
-	local layer = CtrlLayer.new()
-	-- body
-	layer:initLayer(role)
-	return layer
-end
-
 
 return CtrlLayer

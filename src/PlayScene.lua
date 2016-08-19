@@ -2,7 +2,6 @@ PlayeScene = class("PlayeScene",function()
 	return display.newScene("PlayeScene")
 end )
 
-require("CtrlLayer")
 require("BGLayer")
 require("ItemBar")
 require("ItemLayer")
@@ -12,20 +11,28 @@ require("SelectScene")
 
 local size = cc.Director:getInstance():getWinSize()
 
-function PlayeScene:ctor()
-    self.t_data = {}
+function PlayeScene:ctor(tab)
     _G.enemys = {}
+    _G.heros = {}
     self.itemroot = nil
-    self.drag = nil
+
     self.itembar = nil
     self.itembag = nil
-    self.equipbar=  nil
-    --test
-    self:addHero(size.width/4,size.height/5)
+    self.equipbar =  nil
 
-    self:addEnemy(display.cx+200, display.height/5)
-    self:addEnemy(display.cx+100, display.height/5)
-    
+    --
+    local layer= display.newLayer()
+    layer:addTo(self)
+     -- 控制层
+    local ctrllayer = require("CtrlLayer").new()
+    self:addChild(ctrllayer)
+    --背景层
+    local bgLayer = BGLayer:createLayer(tab["bg"])
+    layer:addChild(bgLayer,-1)
+
+    layer:addChild(self:addHero(display.left+300,size.height/5))
+    self:addEnemys(tab["enemyNum"], tab["enemyLvl"],layer)
+
     self:initScene()
 end
 function PlayeScene:initScene()
@@ -33,17 +40,14 @@ function PlayeScene:initScene()
     self.itemroot = ItemBar.new()
     self.itemroot:initItemBar()
     self:addChild(self.itemroot)
-    -- 控制层
-    local ctrllayer = CtrlLayer:createLayer(hero)
-    self:addChild(ctrllayer)
-    --背景层
-    local bgLayer = BGLayer:createLayer()
-    self:addChild(bgLayer,-1)
-    hero.paral = bgLayer.paralNode
-    self:schedule(function() self.updateRole() end ,1/24)
+   
+   
+    -- if #_G.heros >= 1 then
+    --     _G.heros[1].paral = bgLayer.paralNode
+    -- end
+    self:schedule(function() self:update() end ,1/24)
     --UI
     self:initUI()
-
 end
 function PlayeScene:initUI()
     --暂停菜单
@@ -93,41 +97,49 @@ function PlayeScene:initUI()
     :addTo(self)
 
 end
+function PlayeScene:addEnemys(num,lvl,layer)
+    for i=1,num do
+        local e = self:addEnemy(math.random(800,2500), display.height/5)
+        layer:addChild(e)
+        e.health = e.health*lvl
+        e.Atk = e.Atk*lvl
+        e.healthTop = e.health
+    end
+end
 function PlayeScene:addEnemy(posx,posy)
     local role = require("Enemy").new()
     role:setPosition(posx,posy)
-    self:addChild(role)
+    --self:addChild(role)
     role.roleId = #_G.enemys + 1
    -- print(self.roleId)
     table.insert(_G.enemys,role)
    -- print(#_G.enemys)
+   return _G.enemys[#_G.enemys]
 end
 function PlayeScene:addHero(posx,posy)
+   
+   
+    local hero = require("Hero").new()
+    hero:initHero()
+    hero:setPosition(posx,posy)
+    hero:setTag(333)
+    --self:addChild(hero)
     --玩家状态UI
     local head = display.newSprite("playerwindow.png")
     head:scale(1.3)
     self:addChild(head)
     head:setAnchorPoint(cc.p(0,1))
     head:setPosition(display.left, display.height)
-
-    local hero = require("Hero").new()
-    hero:setPosition(posx,posy)
-    hero:setTag(333)
-    self:addChild(hero)
+    
     hero.hpBar = self:addProgressBar("hppool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*0.3)
     hero.mpBar = self:addProgressBar("manapool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*0.8)
-    _G.hero = hero
-
-end
-function PlayeScene:updateRole()
-    _G.hero:updateSelf()
-    for i,v in ipairs(_G.enemys) do
-        v:updateSelf()
-    end
+    hero.expBar = self:addProgressBar("hppool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*1.2)
+    hero.expBar:setPercentage(0)
+    table.insert(_G.heros,hero)
+    return hero
 end
 function PlayeScene:addProgressBar(img,posx,posy)
     -- body
-
     local bar = display.newProgressTimer(img,display.PROGRESS_TIMER_BAR)
     bar:pos(posx,posy)
     bar:setAnchorPoint(cc.p(0,1))
@@ -137,6 +149,20 @@ function PlayeScene:addProgressBar(img,posx,posy)
 
     self:addChild(bar)
     return bar
+end
+function PlayeScene:update()
+    for i,v in ipairs(_G.enemys) do
+        v:updateSelf()
+    end
+    for i,v in ipairs(_G.heros) do
+        v:updateSelf()
+    end
+    --self:updateMapItem()
+end
+function PlayeScene:updateMapItem()
+    if #_G.enemys < 1 then
+        self:addEnemy(display.cx+300, display.height/5)
+    end
 end
 
 return PlayeScene

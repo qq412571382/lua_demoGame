@@ -34,10 +34,11 @@ function SelectScene:initScene()
         	if self.selGuanqia:getChildByTag(self.selGuanqiaIdx):getString() == "Locked" then
         		local act = cc.Sequence:create(cc.ScaleTo:create(0.1,1.4),cc.ScaleTo:create(0.1,1))
         		self.selGuanqia:getChildByTag(self.selGuanqiaIdx):runAction(act)
-   			elseif self.selGuanqiaIdx==1 then
-        		print(self.selGuanqia:getChildByTag(self.selGuanqiaIdx))
-            	local scene = require("PlayScene").new()
-            	self:addChild(scene)
+   			else
+   				local tab = self:getGuanqiaInfo(self.selGuanqiaIdx)
+   				dump(tab)
+            	local scene = require("PlayScene").new(tab)
+            	display.replaceScene(scene)
         	end
         end
     end)
@@ -79,6 +80,7 @@ function SelectScene:addPageView()
 						event.item:scale(1.2)
 						self.selGuanqia = event.item
 						self.selGuanqiaIdx = event.itemIdx
+						self:getGuanqiaInfo(self.selGuanqiaIdx)
 					end
 				else
 					event.item:scale(1.2)
@@ -102,5 +104,12 @@ function SelectScene:addPageView()
 	end
 	self.pv:reload()
 
+end
+function SelectScene:getGuanqiaInfo(number)
+	
+    local data =  cc.HelperFunc:getFileData("/Users/jinwei/Documents/work_space/lua_demo/jsondata.json")
+    local tb = json.decode(data)
+    dump(tb["guanqia"][number])
+    return tb["guanqia"][number]
 end
 return SelectScene

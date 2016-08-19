@@ -62,20 +62,22 @@ function ItemBar:initItemBag()
 	-- self.drag:setTouchSwallowEnabled(false)
 	-- self:addChild(self.drag)
 	--添加item格子
-	for i=1,5 do
-		for j=1,6 do
-			local box = self:createItemBox(i+(j-1)*5,
-			cc.p(bagbg:getPositionX()+(i-4)*65+45,bagbg:getPositionY()+(j-4)*65-10))
-			node:addChild(box,-3)
+	for i=1,6 do
+		for j=1,5 do
+			local box = self:createItemBox((i-1)*5+j,
+			cc.p(bagbg:getPositionX()+(j-4)*65+45,bagbg:getPositionY()+(i-4)*65-10))
+			node:addChild(box,1)
 			self.drag:addDragItem(box):setGroup(999)
-			self.itemboxs[i+(j-1)*5] = box
+			self.itemboxs[(i-1)*5+j] = box
 		end
 	end
 	--self.drag:setContenSize(bagbg:getContentSize())
 	 --添加item
-    local eq1=self:createItem("材料2")
-    local eq2=self:createItem("材料3")
-    --item放入item格子
+    local eq1=self:createItem("材料")
+    eq1:setTag(999)
+    local eq2=self:createItem("材料")
+    eq2:setTag(999)
+
     self.drag:find(self.itemboxs[1]):setDragObj(eq1)
     self.drag:find(self.itemboxs[2]):setDragObj(eq2)
     self:addChild(node)

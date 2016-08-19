@@ -2,14 +2,21 @@ require("BloodText")
 local Role = class("Role", function() 
 	return display.newSprite("idleR_1.png")
 end)
+
+EventManager = require("EventManager")
 Role.moveStep = 3
 Role.lockedEnemy = nil
 Role.movdDirection = 1  -- 1:right -1:left
+Role.healthTop = 100
 Role.health = 100
 Role.animStartTime = 0
 Role.animDuration = 0
 Role.hpBar = nil
+Role.roleType = 0
 Role.roleId = 0
+Role.Atk = 5
+Role.Def = 0
+Role.level = 1
 function Role:ctor()
 	-- body 
 	self:scale(1.8)
@@ -28,29 +35,33 @@ function Role:dead()
 	self:stopAllActions()
 	transition.playAnimationOnce(self,display.getAnimationCache("dead"))
 end
-function Role:getHit()
+function Role:getHit(damage)
 		
 	if self:isBusy() == false then
 		self:stopAllActions()
 		transition.playAnimationOnce(self,display.getAnimationCache("gethit"))
 		self.animStartTime = os.time()
 		self.animDuration = display.getAnimationCache("gethit"):getDuration()
-		self.health = self.health - 12
+		self.health = self.health - damage
 		
-		local label = BloodText:createText(12)
+		local label = BloodText:createText(damage)
     	label:pos(self:getPosition())
     	display.getRunningScene():addChild(label)
-		-- if self.health < 0 then
-		-- 	local delId = self.roleId
-		-- 	table.remove(_G.enemys,self.roleId)
-		-- 	self:removeFromParent()
+		if self.health < 0 then
+			if self.roleType == 0 then
+				local delId = self.roleId
+				table.remove(_G.enemys,self.roleId)
+				self:removeFromParent()
 
-		-- 	for i,v in ipairs(_G.enemys) do
-		-- 		if v.roleId > delId then
-		-- 			v.roleId = v.roleId - 1
-		-- 		end
-		-- 	end
-		-- end
+				EventManager:dispatchEvent({name="OTHER",data={expadd=50}})
+
+				for i,v in ipairs(_G.enemys) do
+					if v.roleId > delId then
+						v.roleId = v.roleId - 1
+					end
+				end
+			end
+		end
 	end
 end
 function Role:idle()
@@ -74,7 +85,6 @@ end
 function Role:isBusy()
 	
 	if os.time() - self.animStartTime >= self.animDuration then
-
 		return false
 	else
 		return true

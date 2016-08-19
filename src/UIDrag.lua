@@ -10,8 +10,7 @@ function UIDragItem:ctor(box)
 	self._group = -1
 end
 function UIDragItem:setGroup(group)
-	--self.
-	--self.(self.t_data[#self.t_data]):getContentSize() = group
+
 	self._group = group
 end
 function UIDragItem:getGroup()
@@ -29,8 +28,6 @@ function UIDragItem:setDragObj(obj)
 		self.dragObj = nil
 	end
 end
-
-
 
 UIDrag = class("UIDrag", function()
 	return display.newNode()
@@ -82,6 +79,7 @@ function UIDrag:onTouchBegan(point)
             local box = item.dragBox
             if cc.rectContainsPoint(box:getBoundingBox(),point) and item.dragObj then
             	if box:getParent():isVisible() then
+            		print("in ontouchbegan")
             		self._currentDragObj = item.dragObj
             		self._currentDragItem = item
             		return true
@@ -93,38 +91,36 @@ function UIDrag:onTouchBegan(point)
     return false
 end
 function UIDrag:onTouchMoved(point)
-	self._currentDragObj:setPosition(point)
+	self._currentDragObj:setPosition(point.x-self._currentDragObj:getContentSize().width/2,
+		point.y-self._currentDragObj:getContentSize().height/2)
 end
 function UIDrag:onTouchEnded(point)
 	for i = 1, #(self._dragItems) do
         local item = self._dragItems[i]
         local box = item.dragBox
-        --print("onTouchBegan")
-        if cc.rectContainsPoint(box:getBoundingBox(), point)then
+
+        if cc.rectContainsPoint(box:getBoundingBox(), point) then
+        	--若格子被占用，不操作
         	if item.dragObj then
  				self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
  				break
+ 			--若背包不可见，不操作
  			elseif box:getParent():isVisible() then
  				if item:getGroup() == self._currentDragObj:getTag() or 
  					item:getGroup() == 999 then
+
            			self._currentDragObj:retain()
  					local obj = self._currentDragObj
  					self._currentDragItem:setDragObj(nil)
  					item:setDragObj(obj)
  					break
+ 				else
+ 					self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
  				end
  			end
+ 		--未拖入框中，不操作
         elseif i == #(self._dragItems) then
             self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
         end
     end
 end
-
-
-
-
-
-
-
-
-

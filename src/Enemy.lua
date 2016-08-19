@@ -82,8 +82,10 @@ function Enemy:searchHero(hero)
 	end
 end
 function Enemy:enemyAI()
+	for i,v in ipairs(_G.heros) do
+		self:searchHero(v)
+	end
 	
-	self:searchHero(_G.hero)
 end
 function Enemy:updateSelf()
 	self:enemyAI()
@@ -99,16 +101,19 @@ function Enemy:updateFSM()
 		self:setPositionX(self:getPositionX() - 1)
 	end
 	if state == "attack" then
-		if cc.rectIntersectsRect(self:getBoundingBox(),_G.hero:getBoundingBox()) then
-			_G.hero:getHit()
+		for i,v in ipairs(_G.heros) do
+			if cc.rectIntersectsRect(self:getBoundingBox(),v:getBoundingBox()) then
+				v:getHit(self.Atk)
+			end
 		end
+		
 	end
 	if state~="idle" and not self:isBusy() and self:enemyCanDoEvent("Kongxian") then
 		self:enemyDoEvent("Kongxian")
 	end
 end
 function Enemy:updateBar()
-	self.hpBar:setPercentage(self.health)
+	self.hpBar:setPercentage(self.health/self.healthTop*100)
 	-- body
 end
 function Enemy:addHpBar()
