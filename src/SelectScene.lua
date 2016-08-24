@@ -1,7 +1,7 @@
 SelectScene = class("SelectScene", function ()
 	return display.newScene("SeleceScene")
 end)
-
+FileHelper = require("FileHelper")
 function SelectScene:ctor()
 	
 	self:initScene()
@@ -35,8 +35,8 @@ function SelectScene:initScene()
         		local act = cc.Sequence:create(cc.ScaleTo:create(0.1,1.4),cc.ScaleTo:create(0.1,1))
         		self.selGuanqia:getChildByTag(self.selGuanqiaIdx):runAction(act)
    			else
-   				local tab = self:getGuanqiaInfo(self.selGuanqiaIdx)
-   				dump(tab)
+   				local tab = FileHelper:getGuanqiaInfo(self.selGuanqiaIdx)
+   				--dump(tab)
             	local scene = require("PlayScene").new(tab)
             	display.replaceScene(scene)
         	end
@@ -45,13 +45,16 @@ function SelectScene:initScene()
     local itemUnlock = cc.MenuItemFont:create("Unlock")
     itemUnlock:setPosition(display.width*0.7,display.height*0.3)
     itemUnlock:registerScriptTapHandler(function ()
-    	--print(self.selGuanqiaIdx)
     	local index = self.selGuanqiaIdx-1
     	if (self.selGuanqiaIdx == 1 or self.selGuanqiaIdx == self.canUnlock) and 
     		self.selGuanqia:getChildByTag(self.selGuanqiaIdx):getString()=="Locked" then
     		print("-----")
         	print(self.selGuanqia:getChildByTag(self.selGuanqiaIdx):setString(self.selGuanqiaIdx))
         	self.canUnlock = self.selGuanqiaIdx + 1
+
+        	local tab = FileHelper:getMapInfo()
+        	tab[self.selGuanqiaIdx]["state"]=self.selGuanqiaIdx
+        	FileHelper:writeMapInfo(tab)
         elseif self.selGuanqia:getChildByTag(self.selGuanqiaIdx):getString() == "Locked" then
         	print("|||||")
         	local act = cc.Sequence:create(cc.ScaleTo:create(0.1,1.4),cc.ScaleTo:create(0.1,1))
@@ -80,7 +83,7 @@ function SelectScene:addPageView()
 						event.item:scale(1.2)
 						self.selGuanqia = event.item
 						self.selGuanqiaIdx = event.itemIdx
-						self:getGuanqiaInfo(self.selGuanqiaIdx)
+						FileHelper:getGuanqiaInfo(self.selGuanqiaIdx)
 					end
 				else
 					event.item:scale(1.2)
@@ -95,7 +98,8 @@ function SelectScene:addPageView()
 		local content = cc.LayerColor:create(cc.c4b(30,60,30,250))
 		content:setContentSize(160,240)
 		content:setTouchEnabled(false)
-		local lab = display.newTTFLabel({text="Locked",color=cc.c3b(166, 166, 166),align=cc.ui.TEXT_ALIGN_CENTER,size=30})
+		txt = FileHelper:getGuanqiaInfo(i)
+		local lab = display.newTTFLabel({text=txt["state"],color=cc.c3b(166, 166, 166),align=cc.ui.TEXT_ALIGN_CENTER,size=30})
     	lab:setPosition(cc.p(content:getContentSize().width/2,content:getContentSize().height/2))
     	lab:setTag(i)
     	item:addChild(lab,1)
@@ -104,12 +108,5 @@ function SelectScene:addPageView()
 	end
 	self.pv:reload()
 
-end
-function SelectScene:getGuanqiaInfo(number)
-	
-    local data =  cc.HelperFunc:getFileData("/Users/jinwei/Documents/work_space/lua_demo/jsondata.json")
-    local tb = json.decode(data)
-    dump(tb["guanqia"][number])
-    return tb["guanqia"][number]
 end
 return SelectScene

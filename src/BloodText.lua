@@ -11,7 +11,7 @@ function BloodText:createText(num)
 	return text
 end
 function BloodText:init(num)
-	display.newTTFLabel({text=num ,font = "Arial",size = 40,align = cc.TEXT_ALIGNMENT_CENTER,color=cc.c3b(255, 0, 0)})
+	display.newTTFLabel({text=num ,font = "Arial",size = 20,align = cc.TEXT_ALIGNMENT_CENTER,color=cc.c3b(255, 0, 0)})
 	:addTo(self)
 end
 function BloodText:startAnimation()

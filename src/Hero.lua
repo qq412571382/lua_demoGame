@@ -5,107 +5,136 @@ EventManager = require("EventManager")
 Hero.paral = nil
 Hero.mpBar = nil
 Hero.expBar = nil
+Hero.lvlLabel = nil
 Hero.mana = 100
+Hero.expTop = 100
 Hero.exp = 0
 Hero.weapon = nil
 Hero.clothes = nil
 Hero.pants = nil
 
 function Hero:ctor()
+	GameData = GameState.load()
+	self.level = GameData.level or 1
+	self.exp = GameData.currentExp or 0
+	self.expTop = self.level*100
 	self.roleType = 1
-	self.health = 100
+	self.health = 100*self.level/2
+	self.healthTop = self.health
+	self.gethitNum = 0
 	self.moveDirection = 1
-	self.Atk = 100
+	self.Atk = 50
 	self:addStateMachine()
 	--添加监听
 	self:addEventListener()
-	self:sendMsg("HERO_MSG",{["level"]=1})
+	self:sendMsg("HERO_MSG",{["level"]=self.level})
 end
 function Hero:initHero()
 	
 end
 function Hero:addEventListener()
-	-- local dispatcher = cc.Director:getInstance():getEventDispatcher() --self:getEventDispatcher()
-	-- local listener = nil
-	-- listener = cc.EventListenerCustom:create("ACTION",handler(self,self.getMsgFromCtrl))
-	-- dispatcher:addEventListenerWithSceneGraphPriority(listener, self)
-	EventManager:addEventListener("ACTION",handler(self,self.getMsgForAction))
-	EventManager:addEventListener("OTHER",handler(self,self.getMSGForOther))
+	EventManager:addEventListener("ACTION",handler(self,self.getMsgFromeCtrl))
+	EventManager:addEventListener("ENEMY_MSG",handler(self,self.getMSGFromEnemy))
 end
 function Hero:sendMsg(name,table)
 	EventManager:pushEvent(name,table)
 end
-function Hero:getMsgForAction(event)
---	print(event.data["action"])
-	print("msg: " .. event.data["action"])
+function Hero:getMsgFromeCtrl(event)
+	--print("msg: " .. event.data["action"])
 	if not event.data["action"] then
 		print("action null")
 		return
 	elseif event.data["action"] == "YidongL" or 
-		event.data["action"] == "YidongR" then
+		event.data["action"] == "YidongR" or 
+		event.data["action"] == "YidongU" or 
+		event.data["action"] == "YidongD" then
 
-		self.moveStep = event.data["moveStep"]
+		self.moveStepX = event.data["moveStepX"] or 0
+		self.moveStepY = event.data["moveStepY"] or 0
 		self:heroDoEvent(event.data["action"])
 	else
 		self:heroDoEvent(event.data["action"])
 	end
 end
-function Hero:getMSGForOther(event)
-	if not event.data["expadd"] then
-		print("msg null")
-		return
-	elseif event.data["expadd"] then
-		self:addExp(event.data["expadd"])
+function Hero:getMSGFromEnemy(event)
+	if event.data["damage"] then
+		self.gethitNum = event.data["damage"]
+		self:heroDoEvent("Githit")
+	elseif event.data["enemy_dead"] == 1 then
+		self:addExp(event.data["exp"])
 	end
 end
 function Hero:addExp(exp)
 	self.exp = self.exp+exp
-	if self.exp >=100 then
-		self.exp = self.exp - 100
+	if self.exp >=self.expTop then
+		self.exp = self.exp - self.expTop
+		self.expTop = self.expTop*2
 		self.level = self.level+1
+		GameData.level = self.level
+		--GameState.save(GameData)
 		EventManager:dispatchEvent({name="HERO_MSG",data={["level"]=self.level}})
 		print("Hero Level: " .. self.level)
 	end
+	GameData.currentExp = self.exp
+	GameState.save(GameData)
 end
 function Hero:jump()
-	self:stopAllActions()
-	self.animStartTime = os.time()
-	self.animDuration = display.getAnimationCache("skill2"):getDuration()
-	transition.playAnimationOnce(self,display.getAnimationCache("jump"))
+	local animate = cc.Animate:create(display.getAnimationCache("jump"))
+	transition.execute(self, animate, {
+		onComplete = function ()
+			self:heroDoEvent("Kongxian")
+		end
+    })
 	self:runAction(cc.JumpBy:create(0.7,cc.p(0,0),140,1))
-	if self.paral ~= nil then
-		transition.execute(self.paral,cc.JumpBy:create(0.7,cc.p(0,0),70,1))
-	end
+	
+end
+function Hero:attack()
+
+	local animate = cc.Animate:create(display.getAnimationCache("hit"))
+	transition.execute(self, animate, {
+		onComplete = function ()
+			self:heroDoEvent("Kongxian")
+		end
+    })
 end
 function Hero:skill1()
 	self:stopAllActions()
-	self.animStartTime = os.time()
-	self.animDuration = display.getAnimationCache("skill1"):getDuration()
-	transition.playAnimationOnce(self,display.getAnimationCache("skill1"))
-	transition.execute(self,cc.MoveBy:create(0.5,cc.p(50*self.moveDirection,0)))
+	
+	local animate = cc.Animate:create(display.getAnimationCache("skill1"))
+	transition.execute(self, animate, {
+		onComplete = function ()
+			self:heroDoEvent("Kongxian")
+		end
+    })
 end
 function Hero:skill2()
-	self:stopAllActions()
-	self.animStartTime = os.time()
-	self.animDuration = display.getAnimationCache("skill2"):getDuration()
-	transition.playAnimationOnce(self,display.getAnimationCache("skill2"))
-	transition.execute(self,cc.MoveBy:create(1,cc.p(200*self.moveDirection,0)))
+
+	local animate = cc.Animate:create(display.getAnimationCache("skill2"))
+	local spawn = cc.Spawn:create(animate,
+		cc.MoveBy:create(0.5,cc.p(150*self.moveDirection,0)))
+	
+	transition.execute(self, spawn, {
+		onComplete = function ()
+			self:heroDoEvent("Kongxian")
+		end
+    })
 end
 function Hero:skill3()
-	self:stopAllActions()
-	self.animStartTime = os.time()
-	self.animDuration = display.getAnimationCache("skill2"):getDuration()
-	display.getAnimationCache("skill3"):setDelayPerUnit(0.05)
-	transition.playAnimationOnce(self,display.getAnimationCache("skill3"))
+	local animate = cc.Animate:create(display.getAnimationCache("skill3"))
+	transition.execute(self, animate, {
+		onComplete = function ()
+			self:heroDoEvent("Kongxian")
+		end
+    })
 	local dis = 0
 	if self:getPositionX() <= 350 then
 		dis = self:getPositionX() - 10
-	elseif self:getPositionX() <= 580 then
+	elseif self:getPositionX() <= 2100 then
 		dis = 350
 	else
-		dis = 890 - self:getPositionX() 
+		dis = 2450 - self:getPositionX() 
 	end
-		transition.execute(self,cc.MoveBy:create(0.25,cc.p(dis*self.moveDirection,0)))
+	transition.execute(self,cc.MoveBy:create(0.25,cc.p(dis*self.moveDirection,0)))
 end
 function Hero:idle2()
 	-- body
@@ -113,37 +142,57 @@ function Hero:idle2()
 	transition.playAnimationForever(self,display.getAnimationCache("idleR2"))
 end
 function Hero:move()
-
-	local heroPosXLast = self:getPositionX()
-	local heroPosYLast = self:getPositionY()
-	if self:getPositionX()+self.moveStep <= 10 or self:getPositionX()+self.moveStep >=2490 then
+	if self:getPositionX()+self.moveStepX <= 10 or self:getPositionX()+self.moveStepX >=2490 then
+		self:setPosition(self:getPositionX(),self:getPositionY())
+	elseif self:getPositionY() + self.moveStepY <=150 or self:getPositionY()+self.moveStepY >=370 then
 		self:setPosition(self:getPositionX(),self:getPositionY())
 	else
-		self:setPosition(self:getPositionX()+self.moveStep,self:getPositionY())
+		self:setPosition(self:getPositionX()+self.moveStepX,self:getPositionY()+self.moveStepY)
 	end
-	-- if self.paral ~= nil then
-	-- 	local heroPosXNow = self:getPositionX()
-	-- 	local heroPosYNow = self:getPositionY()
-
-	-- 	local offsetX = heroPosXNow - heroPosXLast
-	-- 	local offsetY = heroPosYNow - heroPosYLast
-	-- 	if(self.paral:getPositionX()+offsetX <=0 or self.paral:getPositionX() + offsetX >=470) then
-	-- 		self.paral:setPosition(self.paral:getPositionX(),self.paral:getPositionY())
-	-- 	else
-	-- 		self.paral:setPosition(self.paral:getPositionX()+offsetX,self.paral:getPositionY()+offsetY)
-	-- 	end
-	-- end
-	--print("x:".. self:getPositionX() .. " y:" .. self:getPositionY())
 end
-function Hero:moveLeft()
+function Hero:getHit()
+	self:stopAllActions()
+	print("----hero gethit----")
+	local animation = display.getAnimationCache("gethit")
+	animation:setDelayPerUnit(0.3)
 
-	self:playAnimationForever(display.getAnimationCache("moveR"))
-	self:changeFaceDire(-1)
+	self:costHp(self.gethitNum)
+
+	if self.health >0 then
+		local animate = cc.Animate:create(animation)
+		transition.execute(self, animate, {
+			onComplete = function ()
+				self:heroDoEvent("Kongxian")
+			end
+		})
+	end
 end
-function Hero:moveRight()
+function Hero:costHp(damage)
+	--战斗伤害文本
+	local label = BloodText:createText(""..self.gethitNum)
+  	if self:getScaleX() < 0 then
+  		label:setScaleX(-1)
+  	end
+  	self:addChild(label)
+  	--扣血
+  	self.health = self.health-self.gethitNum
 
-	transition.playAnimationForever(self,display.getAnimationCache("moveR"))
-	self:changeFaceDire(1)
+  	if self.health <= 0 then
+
+  		transition.execute(self, cc.Blink:create(1,4), {
+			onComplete = function ()
+				--游戏结束
+				local pauselayer = require("PauseLayer").new({
+                btnGoOn = function()
+                    print("game over")
+                    display.resume()
+                    display.replaceScene(require("SelectScene").new())
+                end
+                })
+            display.getRunningScene():addChild(pauselayer)
+			end
+    	})
+  	end
 end
 function Hero:addStateMachine()
 	self.fsm ={}
@@ -152,17 +201,19 @@ function Hero:addStateMachine()
 	self.fsm:setupState({
 		initial = "idle",
 		events = {
-			{name = "Gongji",from={"idle","moveL","moveR"},to="attack"},
-			{name = "Jineng1",from={"idle","moveL","moveR"},to="skill1"},
-			{name = "Jineng2",from={"idle","moveL","moveR"},to="skill2"},
-			{name = "Jineng3",from={"idle","moveL","moveR"},to="skill3"},
+			{name = "Gongji",from={"idle","moveL","moveR","moveU","moveD"},to="attack"},
+			{name = "Jineng1",from={"idle","moveL","moveR","moveU","moveD"},to="skill1"},
+			{name = "Jineng2",from={"idle","moveL","moveR","moveU","moveD"},to="skill2"},
+			{name = "Jineng3",from={"idle","moveL","moveR","moveU","moveD"},to="skill3"},
 			{name = "Kongxian",from={"attack","skill1","skill2","skill3",
-			"getattack","jump","moveL","moveR"},to="idle"},
+			"attacked","jump","moveL","moveR","moveD","moveU"},to="idle"},
 			{name = "Tiaoyue",from="idle",to="jump"},
-			{name = "YidongL",from="idle",to="moveL"},
-			{name = "YidongR",from="idle",to="moveR"},
-			{name = "Githit",from={"idle","moveL","moveR"},to="attacked"},
-			{name = "Siwang",from={"idle","moveL","moveR","attack","attacked"},to="dead"}
+			{name = "YidongL",from={"idle","moveR","moveU","moveD"},to="moveL"},
+			{name = "YidongR",from={"idle","moveL","moveU","moveD"},to="moveR"},
+			{name = "YidongU",from={"idle","moveL","moevD","moveR"},to="moveU"},
+			{name = "YidongD",from={"idle","moveL","moveR","moveU"},to="moveD"},
+			{name = "Githit",from={"idle","moveL","moveR","moveU","moveD","attack","attacked"},to="attacked"},
+			{name = "Siwang",from={"idle","moveL","moveR","moveU","moveD","attack","attacked"},to="dead"}
 		},
 		callbacks = {
 
@@ -190,6 +241,12 @@ function Hero:addStateMachine()
 			onentermoveR = function (event)
 				self:moveRight()
 			end,
+			onentermoveU = function (event)
+				self:moveUp()
+			end,
+			onentermoveD = function (event)
+				self:moveDown()
+			end,
 			onenterattacked = function (event)
 				self:getHit()
 			end
@@ -201,32 +258,22 @@ function Hero:heroDoEvent(event)
 		self.fsm:doEvent(event)
 	end
 end
-function Hero:heroCanDoEvent(event)
-	return self.fsm:canDoEvent(event)
-end
 function Hero:updateFSM()
 	local state = self.fsm:getState()
-	if state ~= "idle" and not self:isBusy() and self:heroCanDoEvent("Kongxian") then
-		if state ~= "moveL" and state ~= "moveR" then
-			self:heroDoEvent("Kongxian")
-		end
-	end
-	if state == "moveL" or state == "moveR" then
+	if state == "moveL" or state == "moveR" or state == "moveU"or state == "moveD"  then
 		self:move()
-	end
-end
-function Hero:updateHit()
-	local state = self.fsm:getState()
-	if state=="attack" or state=="skill1" or state=="skill2" or state=="sill3" then
+	elseif state=="attack" or state=="skill1" or state=="skill2" or state=="sill3" then
 		for i,v in ipairs(_G.enemys) do
-			if cc.rectIntersectsRect(self:getBoundingBox(),v:getBoundingBox()) then
-				v:getHit(self.Atk)
+			if cc.rectIntersectsRect(self:getBoundingBox(),v:getBoundingBox()) 
+			and v:getPositionY() <= self:getPositionY()+5 
+			and v:getPositionY() >= self:getPositionY()-5  then
+				self:sendMsg("HERO_MSG",{["damage"]=self.Atk})
+				v:enemyDoEvent("Githit")
 			end	
 		end
 	end
 end
 function Hero:updateSelf()
-	self:updateHit()
 	self:updateFSM()
 	self:updateBar()
 end
@@ -236,10 +283,13 @@ function Hero:updateBar()
 		if self.health < 0 then
 			self.health = 0
 		end
-		self.hpBar:setPercentage(self.health)
+		self.hpBar:setPercentage(self.health/self.healthTop*100)
 	end
 	if self.expBar then
-		self.expBar:setPercentage(self.exp)
+		self.expBar:setPercentage(self.exp/self.expTop*100)
+	end
+	if self.lvlLabel then
+		self.lvlLabel:setString(self.level.."")
 	end
 end
 

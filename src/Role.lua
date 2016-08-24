@@ -4,7 +4,8 @@ local Role = class("Role", function()
 end)
 
 EventManager = require("EventManager")
-Role.moveStep = 3
+Role.moveStepX = 0
+Role.moveStepY = 0
 Role.lockedEnemy = nil
 Role.movdDirection = 1  -- 1:right -1:left
 Role.healthTop = 100
@@ -14,7 +15,7 @@ Role.animDuration = 0
 Role.hpBar = nil
 Role.roleType = 0
 Role.roleId = 0
-Role.Atk = 5
+Role.Atk = 10
 Role.Def = 0
 Role.level = 1
 function Role:ctor()
@@ -23,54 +24,44 @@ function Role:ctor()
 	self:idle()
 end
 function Role:attack()
-
-	if self:isBusy() == false then
-		self:stopAllActions()
-		transition.playAnimationOnce(self,display.getAnimationCache("hit"))
-		self.animStartTime = os.time()
-		self.animDuration = display.getAnimationCache("hit"):getDuration()+0.1
-	end
+	self:stopAllActions()
+	local animate = cc.Animate:create(display.getAnimationCache("hit"))
+	transition.execute(self, animate, {
+		onComplete = function ()
+			self:enemyDoEvent("Kongxian")
+		end
+    })
 end
 function Role:dead()
 	self:stopAllActions()
 	transition.playAnimationOnce(self,display.getAnimationCache("dead"))
 end
-function Role:getHit(damage)
-		
-	if self:isBusy() == false then
-		self:stopAllActions()
-		transition.playAnimationOnce(self,display.getAnimationCache("gethit"))
-		self.animStartTime = os.time()
-		self.animDuration = display.getAnimationCache("gethit"):getDuration()
-		self.health = self.health - damage
-		
-		local label = BloodText:createText(damage)
-    	label:pos(self:getPosition())
-    	display.getRunningScene():addChild(label)
-		if self.health < 0 then
-			if self.roleType == 0 then
-				local delId = self.roleId
-				table.remove(_G.enemys,self.roleId)
-				self:removeFromParent()
-
-				EventManager:dispatchEvent({name="OTHER",data={expadd=50}})
-
-				for i,v in ipairs(_G.enemys) do
-					if v.roleId > delId then
-						v.roleId = v.roleId - 1
-					end
-				end
-			end
-		end
-	end
-end
 function Role:idle()
-
 		self:stopAllActions()
 		display.getAnimationCache("idleR"):setDelayPerUnit(0.3)
 		transition.playAnimationForever(self,display.getAnimationCache("idleR"))
 end
 
+function Role:moveLeft()
+	self:stopAllActions()
+	self:changeFaceDire(-1)
+	self:playAnimationForever(display.getAnimationCache("moveR"))
+end
+function Role:moveRight()
+	self:stopAllActions()
+	self:changeFaceDire(1)
+	self:playAnimationForever(display.getAnimationCache("moveR"))
+end
+function Role:moveDown()
+	self:stopAllActions()
+	transition.playAnimationForever(self,display.getAnimationCache("moveR"))
+	--self:changeFaceDire(1)
+end
+function Role:moveUp()
+	self:stopAllActions()
+	transition.playAnimationForever(self,display.getAnimationCache("moveR"))
+	--self:changeFaceDire(1)
+end
 function Role:changeFaceDire(direction)
 	-- body
 	self:setScaleX(direction)
@@ -81,13 +72,5 @@ function Role:changeFaceDire(direction)
 		self.moveDirection = -1
 	end
 	self:setScaleX(self.moveDirection*1.8)
-end
-function Role:isBusy()
-	
-	if os.time() - self.animStartTime >= self.animDuration then
-		return false
-	else
-		return true
-	end
 end
 return Role
