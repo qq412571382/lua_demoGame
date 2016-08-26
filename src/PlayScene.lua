@@ -52,10 +52,11 @@ function PlayeScene:initScene()
     self.itemroot:initItemBar()
     self:addChild(self.itemroot)
    
-   
-    -- if #_G.heros >= 1 then
-    --     _G.heros[1].paral = bgLayer.paralNode
-    -- end
+    self.itembag = self.itemroot:initItemBag()
+    self.itembag:setVisible(false)
+    self.equipbar = self.itemroot:initEquipBar()
+    self.equipbar:setVisible(false)
+    self.itemroot:initItems()
     self:schedule(function() self:update() end ,1/24)
     --UI
     self:initUI()
@@ -115,7 +116,7 @@ function PlayeScene:initUI()
 end
 function PlayeScene:addEnemys(num,lvl,layer)
     for i=1,num do
-        local e = self:addEnemy(math.random(800,2500), display.height/2)
+        local e = self:addEnemy(math.random(400,500), display.height/2)
         layer:addChild(e)
         e.health = e.health*lvl
         e.Atk = e.Atk*lvl
@@ -134,42 +135,26 @@ function PlayeScene:addEnemy(posx,posy)
 end
 function PlayeScene:addHero(posx,posy)
    
-   
     local hero = require("Hero").new()
     hero:initHero()
     hero:setPosition(posx,posy)
     hero:setTag(333)
+    --hero statu bar
+    local rootnode = cc.uiloader:load("playerwindow.json")
+    rootnode:addTo(self)
+    rootnode:pos(display.left,display.height)
 
-    --玩家状态UI
-    local head = display.newSprite("playerwindow.png")
-    head:scale(1.3)
-    self:addChild(head)
-    head:setAnchorPoint(cc.p(0,1))
-    head:setPosition(display.left, display.height)
-
-    hero.lvlLabel = display.newTTFLabel({text=""..hero.level,size=32})
-    hero.lvlLabel:pos(head:getPositionX()+55, head:getPositionY()-55)
-    self:addChild(hero.lvlLabel)
-
-    hero.hpBar = self:addProgressBar("hppool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*0.3)
-    hero.mpBar = self:addProgressBar("manapool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*0.8)
-    hero.expBar = self:addProgressBar("hppool.png", head:getPositionX()+head:getContentSize().width/2-30,head:getPositionY()-head:getContentSize().height*1.2)
-    hero.expBar:setPercentage(0)
+    local window = rootnode:getChildByTag(4)
+    hero.hpBar = window:getChildByTag(7)
+    hero.mpBar = window:getChildByTag(6)
+    hero.expBar = window:getChildByTag(5)
+    hero.lvlLabel = window:getChildByTag(8)
+    hero.expBar:setPercent(0)
+   
     table.insert(_G.heros,hero)
     return hero
 end
-function PlayeScene:addProgressBar(img,posx,posy)
-    -- body
-    local bar = display.newProgressTimer(img,display.PROGRESS_TIMER_BAR)
-    bar:pos(posx,posy)
-    bar:setAnchorPoint(cc.p(0,1))
-    bar:setBarChangeRate(cc.p(1,0))
-    bar:setMidpoint(cc.p(0,0))
-    bar:setPercentage(100)
 
-    self:addChild(bar)
-    return bar
-end
 function PlayeScene:update()
     for i,v in ipairs(_G.enemys) do
         v:updateSelf()
@@ -184,9 +169,11 @@ function PlayeScene:update()
                     print("game over")
                     display.resume()
                     local tab = FileHelper:getMapInfo()
+                    dump(tab)
                     tab[self.guanqiaIdx+1]["state"] = self.guanqiaIdx+1
                     FileHelper:writeMapInfo(tab)
-
+                    
+                    dump(FileHelper:getMapInfo())
                     display.replaceScene(require("SelectScene").new())
                 end
                 })

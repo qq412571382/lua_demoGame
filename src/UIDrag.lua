@@ -10,7 +10,6 @@ function UIDragItem:ctor(box)
 	self._group = -1
 end
 function UIDragItem:setGroup(group)
-
 	self._group = group
 end
 function UIDragItem:getGroup()
@@ -29,6 +28,21 @@ function UIDragItem:setDragObj(obj)
 	end
 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--负责接收，并判断监听
 UIDrag = class("UIDrag", function()
 	return display.newNode()
 end)
@@ -100,9 +114,21 @@ function UIDrag:onTouchEnded(point)
         local box = item.dragBox
 
         if cc.rectContainsPoint(box:getBoundingBox(), point) then
-        	--若格子被占用，不操作
+        	--若格子被占用，交换位置
         	if item.dragObj then
- 				self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
+ 				--self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
+ 				if item:getGroup() == self._currentDragItem:getGroup() then
+	 				self._currentDragObj:retain()
+	 				item.dragObj:retain()
+	 				local obj_before = self._currentDragObj
+	 				local obj_now = item.dragObj
+	 				self._currentDragItem:setDragObj(nil)
+	 				item:setDragObj(nil)
+	 				self._currentDragItem:setDragObj(obj_now)
+	 				item:setDragObj(obj_before)
+	 			else
+	 				self._currentDragObj:setPosition(self._currentDragItem.dragBox:getPosition())
+	 			end
  				break
  			--若背包不可见，不操作
  			elseif box:getParent():isVisible() then

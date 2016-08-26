@@ -283,10 +283,10 @@ function Hero:updateBar()
 		if self.health < 0 then
 			self.health = 0
 		end
-		self.hpBar:setPercentage(self.health/self.healthTop*100)
+		self.hpBar:setPercent(self.health/self.healthTop*100)
 	end
 	if self.expBar then
-		self.expBar:setPercentage(self.exp/self.expTop*100)
+		self.expBar:setPercent(self.exp/self.expTop*100)
 	end
 	if self.lvlLabel then
 		self.lvlLabel:setString(self.level.."")

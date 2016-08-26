@@ -8,6 +8,7 @@ function SelectScene:ctor()
 	self.selGuanqia = nil
 	self.selGuanqiaIdx = nil
 	self.canUnlock = nil
+	dump(FileHelper:getMapInfo())
 end
 
 function SelectScene:initScene()
@@ -83,7 +84,7 @@ function SelectScene:addPageView()
 						event.item:scale(1.2)
 						self.selGuanqia = event.item
 						self.selGuanqiaIdx = event.itemIdx
-						FileHelper:getGuanqiaInfo(self.selGuanqiaIdx)
+						--FileHelper:getGuanqiaInfo(self.selGuanqiaIdx)
 					end
 				else
 					event.item:scale(1.2)

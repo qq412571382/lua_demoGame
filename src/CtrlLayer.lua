@@ -54,9 +54,9 @@ function CtrlLayer:getMsgForSkill(event)
             self.btnS2:setButtonEnabled(true)
             self.btnS3:setButtonEnabled(false)
         else
-            -- self.btnS1:setButtonEnabled(true)
-            -- self.btnS2:setButtonEnabled(true)
-            -- self.btnS3:setButtonEnabled(true)
+            self.btnS1:setButtonEnabled(true)
+            self.btnS2:setButtonEnabled(true)
+            self.btnS3:setButtonEnabled(true)
         end
     end
 end
@@ -110,7 +110,7 @@ function CtrlLayer:addJoystick()
     local node = display.newNode()
     --node:setPosition(0,0)
     node:addChild(self.stickBg)
-    node:addChild(self.stick, 1)
+    node:addChild(self.stick)
     node:setContentSize(250,250)
     self:addChild(node)
     node:setTouchEnabled(true)

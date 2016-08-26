@@ -47,14 +47,17 @@ function Enemy:costHp(damage)
 
   	if self.health <= 0 then
   		--传消息给hero，敌人死亡
-  		EventManager:pushEvent("ENEMY_MSG",{["enemy_dead"]=1,["exp"]=60})
+  		EventManager:pushEvent("ENEMY_MSG",
+  			{["enemy_dead"]=1,["exp"]=60,["itemname"]="材料",["itemtype"]=999,
+  			["posx"]=self:getPositionX(),["posy"]=self:getPositionY()-70})
+
   		--从场景移除自身
   		local delId = self.roleId
 		
   		transition.execute(self, cc.Blink:create(1,4), {
 			onComplete = function ()
 				table.removebyvalue(_G.enemys, self)
-				self:removeFromParent()
+				self:removeFromParent() 
 			end
     	})
   	end
